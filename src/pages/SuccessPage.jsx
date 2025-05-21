@@ -3,6 +3,10 @@ import { Container, Row, Col, Card, CardBody } from 'reactstrap';
 
 
 const SuccessPage = () => {
+
+
+
+
     return (
         <>
             <Container className="mt-5">

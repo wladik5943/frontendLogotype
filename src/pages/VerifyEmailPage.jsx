@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import api from '../api';
 import Navbar from "../utils/Navbar";
+import axios from "axios";
 export default function ResetPasswordPage() {
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
@@ -27,11 +28,14 @@ export default function ResetPasswordPage() {
             e.preventDefault();
             if (!code) return setError('Введите код');
             try {
+                const api = axios.create({
+                    baseURL: process.env.REACT_APP_API_URL || '',
+                });
                 await api.post('/password/verify-code', {email: form.email, code});
                 setError('');
                 setSuccessMsg('Почта подтверждена');
                 const response = await api.post('/oauth/sign-up', form);
-                // например, редирект на логин: window.location.href = '/login';
+
                 const accessToken = response.data.accessToken;
                 sessionStorage.setItem('accessToken', accessToken);
 
@@ -47,7 +51,7 @@ export default function ResetPasswordPage() {
         return (
 
             <>
-                <Navbar />
+
 
                 <div className="container mt-5" style={{maxWidth: 400}}>
                     <div className="bg-white p-4 rounded shadow">

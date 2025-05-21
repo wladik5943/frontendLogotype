@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from "../api";
-import 'bootstrap/dist/css/bootstrap.min.css';     // уже есть
+import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import {getUser} from '../utils/auth';
 import AppNavbar from "../utils/AppNavbar";
 
 export default function EditProfile() {
-    // Состояние для формы
+
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
-import Navbar from "../utils/Navbar";
+
 export default function ResetPasswordPage() {
     const [step, setStep] = useState(1);
     const [email, setEmail] = useState('');
@@ -12,22 +12,22 @@ export default function ResetPasswordPage() {
     const [isAuthorized, setIsAuthorized] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken');
+        const token = sessionStorage.getItem('accessToken');
         if (!token) {
             setIsAuthorized(false);
             setLoading(false);
             return;
         }
 
-        api.get('/oauth/me')
-            .then(res => {
-                setIsAuthorized(true);
-                setEmail(res.data.email);
-            })
-            .catch(() => {
-                setIsAuthorized(false);
-            })
-            .finally(() => setLoading(false));
+        const user = sessionStorage.getItem('user');
+        if(user){
+            setIsAuthorized(true);
+            setEmail(JSON.parse(user).email);
+        }else {
+            setIsAuthorized(false)
+        }
+        setLoading(false)
+
     }, []);
 
     const handleSendCode = async (e) => {

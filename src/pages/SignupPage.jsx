@@ -1,5 +1,5 @@
 import React, { useState} from 'react';
-import api from '../api'; // убедись, что путь правильный
+import api from '../api';
 
 export default function SignupPage() {
     const [error, setError] = useState('');
@@ -26,7 +26,21 @@ export default function SignupPage() {
         }
 
         try {
-             await api.post('/password/verify-email', {email:form.email,firstName:form.firstName} );
+            try {
+
+                await api.post('/password/verify-email', {email: form.email, firstName: form.firstName});
+            }catch (error) {
+                if (error.response) {
+                    console.error('Server error:', error.response.data);  // 👈 покажет тело 500-ки
+                    alert(`Ошибка: ${error.response.data}`);
+                } else {
+                    console.error('Network error:', error.message);
+                    alert('Ошибка сети');
+                }
+            }
+
+
+
             setError('');
             sessionStorage.setItem("signupForm", JSON.stringify(form));
 

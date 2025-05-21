@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
     Modal, ModalHeader, ModalBody,
-    Form, FormGroup, Label, Input, Button
+    Form, FormGroup, Label, Input, Button, Alert
 } from 'reactstrap';
-
 
 const fieldTypes = [
     { label: "Single line text", value: "TEXT_SINGLE_LINE" },
@@ -17,11 +16,13 @@ const fieldTypes = [
 const FieldModal = ({ isOpen, toggle, field, onSave }) => {
     const [formData, setFormData] = useState({
         label: '',
-        type: 'COMBOBOX', // enum-значение
-        options: 'Option 1\nOption 2',
+        type: 'COMBOBOX',
+        options: '',
         required: false,
         active: true
     });
+
+    const [error, setError] = useState('');
 
     useEffect(() => {
         if (field) {
@@ -36,12 +37,13 @@ const FieldModal = ({ isOpen, toggle, field, onSave }) => {
             setFormData({
                 label: '',
                 type: 'COMBOBOX',
-                options: 'Option 1\nOption 2',
+                options: '',
                 required: false,
                 active: true
             });
         }
-    }, [field]);
+        setError('');
+    }, [field, isOpen]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -53,7 +55,7 @@ const FieldModal = ({ isOpen, toggle, field, onSave }) => {
 
     const handleSave = () => {
         if (!formData.label.trim()) {
-            alert('Label is required');
+            setError('Label is required.');
             return;
         }
 
@@ -63,10 +65,11 @@ const FieldModal = ({ isOpen, toggle, field, onSave }) => {
             : [];
 
         if (needsOptions && optionsArray.length === 0) {
-            alert('Options are required for this field type');
+            setError('Options are required for this field type.');
             return;
         }
 
+        setError('');
         onSave({
             ...formData,
             options: optionsArray
@@ -75,8 +78,15 @@ const FieldModal = ({ isOpen, toggle, field, onSave }) => {
 
     return (
         <Modal isOpen={isOpen} toggle={toggle} backdrop="static">
-            <ModalHeader toggle={toggle}>Add Field</ModalHeader>
+            <ModalHeader toggle={toggle}>
+                {field ? 'Edit Field' : 'Add Field'}
+            </ModalHeader>
             <ModalBody>
+                {error && (
+                    <Alert color="danger">
+                        {error}
+                    </Alert>
+                )}
                 <Form>
                     <FormGroup>
                         <Label for="label">Label<span className="text-danger">*</span></Label>
@@ -117,6 +127,7 @@ const FieldModal = ({ isOpen, toggle, field, onSave }) => {
                                 rows="4"
                                 value={formData.options}
                                 onChange={handleChange}
+                                placeholder="One option per line"
                             />
                         </FormGroup>
                     )}

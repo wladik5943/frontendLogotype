@@ -4,7 +4,7 @@ import {
     PaginationLink
 } from 'reactstrap';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
-import FieldModal from './FieldAddModal';
+import FieldModal from '../modalWindows/FieldAddModal';
 import { getUser } from '../utils/auth';
 import api from '../api';
 
@@ -72,6 +72,7 @@ const FieldsPage = () => {
                 setFields([...fields, res.data]);
             }
             setModalOpen(false);
+
             await loadFields(currentPage);
         } catch (err) {
             console.error('Error saving field:', err);
@@ -147,15 +148,59 @@ const FieldsPage = () => {
                         <small className="text-muted">
                             1–{fields.length} of {fields.length}
                         </small>
-                        <Pagination size="sm">
-                            {[...Array(totalPages)].map((_, i) => (
-                                <PaginationItem key={i} active={i === currentPage}>
-                                    <PaginationLink onClick={() => handlePageChange(i)}>
-                                        {i + 1}
-                                    </PaginationLink>
-                                </PaginationItem>
-                            ))}
+
+
+                        <Pagination size="sm" className="mb-0">
+
+                            {/* В начало */}
+                            <PaginationItem disabled={currentPage === 0}>
+                                <PaginationLink first onClick={() => handlePageChange(0)} />
+                            </PaginationItem>
+
+                            {/* Назад */}
+                            <PaginationItem disabled={currentPage === 0}>
+                                <PaginationLink previous onClick={() => handlePageChange(currentPage - 1)} />
+                            </PaginationItem>
+
+                            {/* Номера страниц с троеточиями */}
+                            {Array.from({ length: totalPages }, (_, i) => i)
+                                .filter(i =>
+                                    i === 0 ||
+                                    i === totalPages - 1 ||
+                                    Math.abs(i - currentPage) <= 1
+                                )
+                                .map((i, index, arr) => {
+                                    // Добавим троеточие перед/после разрывов
+                                    const prev = arr[index - 1];
+                                    if (prev !== undefined && i - prev > 1) {
+                                        return [
+                                            <PaginationItem key={`dots-${i}`} disabled><PaginationLink>…</PaginationLink></PaginationItem>,
+                                            <PaginationItem key={i} active={i === currentPage}>
+                                                <PaginationLink onClick={() => handlePageChange(i)}>{i + 1}</PaginationLink>
+                                            </PaginationItem>
+                                        ];
+                                    }
+                                    return (
+                                        <PaginationItem key={i} active={i === currentPage}>
+                                            <PaginationLink onClick={() => handlePageChange(i)}>{i + 1}</PaginationLink>
+                                        </PaginationItem>
+                                    );
+                                })
+                                .flat()
+                            }
+
+                            {/* Вперёд */}
+                            <PaginationItem disabled={currentPage >= totalPages - 1}>
+                                <PaginationLink next onClick={() => handlePageChange(currentPage + 1)} />
+                            </PaginationItem>
+
+                            {/* В конец */}
+                            <PaginationItem disabled={currentPage >= totalPages - 1}>
+                                <PaginationLink last onClick={() => handlePageChange(totalPages - 1)} />
+                            </PaginationItem>
                         </Pagination>
+
+
 
                     </div>
                 </div>
