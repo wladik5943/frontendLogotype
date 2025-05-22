@@ -12,11 +12,12 @@ const FieldsPage = () => {
     const [fields, setFields] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
     const [currentField, setCurrentField] = useState(null);
+    const [errorMessage, setErrorMessage] = useState(null);
     const user = getUser();
-    const [currentPage, setCurrentPage] = useState(0); // Страница с 0
-    const [pageSize] = useState(10); // Кол-во полей на странице
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
-    // Загрузка полей при монтировании
+
     useEffect(() => {
         loadFields();
     }, []);
@@ -41,7 +42,6 @@ const FieldsPage = () => {
         }
     };
 
-
     const handleAddField = () => {
         setCurrentField(null);
         setModalOpen(true);
@@ -59,6 +59,12 @@ const FieldsPage = () => {
             await loadFields(currentPage);
         } catch (err) {
             console.error('Error deleting field:', err);
+            setErrorMessage(
+                err.response?.status === 400 || err.response?.status === 500
+                    ? 'Поле используется в анкете и не может быть удалено.'
+                    : 'Произошла ошибка при удалении поля.'
+            );
+            setTimeout(() => setErrorMessage(null), 5000);
         }
     };
 
@@ -72,7 +78,6 @@ const FieldsPage = () => {
                 setFields([...fields, res.data]);
             }
             setModalOpen(false);
-
             await loadFields(currentPage);
         } catch (err) {
             console.error('Error saving field:', err);
@@ -81,8 +86,6 @@ const FieldsPage = () => {
 
     return (
         <>
-
-
             <div className="container">
                 <div className="bg-white p-4 rounded border mt-5 shadow-sm" style={{ maxWidth: '1000px', margin: '40px auto' }}>
                     <div className="d-flex justify-content-between align-items-center mb-3">
@@ -91,6 +94,14 @@ const FieldsPage = () => {
                             <FaPlus className="me-2" /> Add Field
                         </Button>
                     </div>
+
+                    {errorMessage && (
+                        <div className="mb-3">
+                            <div className="alert alert-danger" role="alert">
+                                {errorMessage}
+                            </div>
+                        </div>
+                    )}
 
                     <Table bordered hover responsive className="mb-0">
                         <thead className="table-light">
@@ -149,20 +160,13 @@ const FieldsPage = () => {
                             1–{fields.length} of {fields.length}
                         </small>
 
-
                         <Pagination size="sm" className="mb-0">
-
-                            {/* В начало */}
                             <PaginationItem disabled={currentPage === 0}>
                                 <PaginationLink first onClick={() => handlePageChange(0)} />
                             </PaginationItem>
-
-                            {/* Назад */}
                             <PaginationItem disabled={currentPage === 0}>
                                 <PaginationLink previous onClick={() => handlePageChange(currentPage - 1)} />
                             </PaginationItem>
-
-                            {/* Номера страниц с троеточиями */}
                             {Array.from({ length: totalPages }, (_, i) => i)
                                 .filter(i =>
                                     i === 0 ||
@@ -170,7 +174,6 @@ const FieldsPage = () => {
                                     Math.abs(i - currentPage) <= 1
                                 )
                                 .map((i, index, arr) => {
-                                    // Добавим троеточие перед/после разрывов
                                     const prev = arr[index - 1];
                                     if (prev !== undefined && i - prev > 1) {
                                         return [
@@ -188,20 +191,13 @@ const FieldsPage = () => {
                                 })
                                 .flat()
                             }
-
-                            {/* Вперёд */}
                             <PaginationItem disabled={currentPage >= totalPages - 1}>
                                 <PaginationLink next onClick={() => handlePageChange(currentPage + 1)} />
                             </PaginationItem>
-
-                            {/* В конец */}
                             <PaginationItem disabled={currentPage >= totalPages - 1}>
                                 <PaginationLink last onClick={() => handlePageChange(totalPages - 1)} />
                             </PaginationItem>
                         </Pagination>
-
-
-
                     </div>
                 </div>
             </div>

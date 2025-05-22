@@ -27,7 +27,7 @@ const TestSelectionPage = () => {
     const fetchTests = async () => {
         setLoading(true);
         try {
-            const url = mode === "mine" ? "/test/mine" : "/test/all";
+            const url = mode === "mine" ? "/test/mine" : "/test/active";
             const response = await api.get(url);
             setTests(response.data || []);
         } catch (err) {
@@ -57,6 +57,18 @@ const TestSelectionPage = () => {
         }
     };
 
+    const handleDelete = async (id) => {
+
+
+        try {
+            await api.delete(`/test/${id}`);
+            setTests(prev => prev.filter(t => t.id !== id));
+        } catch (err) {
+            console.error("Ошибка при удалении теста:", err);
+            alert("Не удалось удалить тест.");
+        }
+    };
+
 
     return (
         <Container className="mt-5">
@@ -76,9 +88,21 @@ const TestSelectionPage = () => {
                     {tests
                         .filter(test => mode !== 'all' || test.active)
                         .map((test) => (
-                        <Col md="6" lg="4" className="mb-4" key={test.id}>
-                            <Card>
-                                <Card className="h-100">
+                            <Col md="6" lg="4" className="mb-4" key={test.id}>
+                                <Card className="h-100 position-relative shadow-sm">
+                                    {mode === 'mine' && (
+                                        <Button
+                                            color="danger"
+                                            outline
+                                            size="sm"
+                                            className="position-absolute top-0 end-0 m-2"
+                                            onClick={() => handleDelete(test.id)}
+                                            title="Удалить тест"
+                                        >
+                                            <i className="bi bi-trash" />
+                                        </Button>
+                                    )}
+
                                     <CardBody className="d-flex flex-column">
                                         <CardTitle tag="h5" className="mb-3 card-title-fixed">{test.title}</CardTitle>
 
@@ -93,10 +117,9 @@ const TestSelectionPage = () => {
                                                         onChange={async () => {
                                                             try {
                                                                 await api.patch(`/test/${test.id}/status`);
-                                                                // обновим локальный список тестов
                                                                 setTests(prev =>
                                                                     prev.map(t =>
-                                                                        t.id === test.id ? {...t, active: !t.active} : t
+                                                                        t.id === test.id ? { ...t, active: !t.active } : t
                                                                     )
                                                                 );
                                                             } catch (err) {
@@ -105,10 +128,7 @@ const TestSelectionPage = () => {
                                                             }
                                                         }}
                                                     />
-                                                    <label
-                                                        className="form-check-label"
-                                                        htmlFor={`activeSwitch-${test.id}`}
-                                                    >
+                                                    <label className="form-check-label" htmlFor={`activeSwitch-${test.id}`}>
                                                         {test.active ? 'Активна' : 'Неактивна'}
                                                     </label>
                                                 </div>
@@ -129,12 +149,11 @@ const TestSelectionPage = () => {
                                                 </Button>
                                             )}
                                         </div>
-
                                     </CardBody>
                                 </Card>
-                            </Card>
-                        </Col>
-                    ))}
+                            </Col>
+
+                        ))}
                 </Row>
             )}
             {currentEditTest && (

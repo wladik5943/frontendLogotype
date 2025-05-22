@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import {
     Table,
     Pagination, PaginationItem, PaginationLink,
-    Spinner
+    Spinner,
+    Modal, ModalHeader, ModalBody, Button
 } from 'reactstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import api from "../api";
@@ -19,10 +20,12 @@ const AnswerPage = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
-    const pageSize = 10;
-
     const [testName, setTestName] = useState('');
+    const [showAccessDeniedModal, setShowAccessDeniedModal] = useState(false);
+
+    const pageSize = 10;
     const stompRef = useRef(null);
+    const navigate = useNavigate();
 
     const loadAnswers = async (pageToLoad = 0) => {
         setLoading(true);
@@ -44,7 +47,11 @@ const AnswerPage = () => {
                 }
             }
         } catch (err) {
-            console.error("Ошибка при загрузке ответов:", err);
+            if (err.response?.status === 403) {
+                setShowAccessDeniedModal(true);
+            } else {
+                console.error("Ошибка при загрузке ответов:", err);
+            }
         } finally {
             setLoading(false);
         }
@@ -56,9 +63,6 @@ const AnswerPage = () => {
 
     useEffect(() => {
         const token = sessionStorage.getItem('accessToken');
-        const api = axios.create({
-            baseURL: process.env.REACT_APP_API_URL || '',
-        });
         const socket = new SockJS(`${process.env.REACT_APP_API_URL || ''}/ws?access_token=${token}`);
         const stompClient = new Client({
             webSocketFactory: () => socket,
@@ -75,20 +79,17 @@ const AnswerPage = () => {
                 stompClient.subscribe(`/topic/test/${testId}/answers/new`, (message) => {
                     const newAnswer = JSON.parse(message.body);
 
-                    // Только если мы на первой странице
                     if (page === 0) {
                         setAnswers(prev => {
                             const updated = [newAnswer, ...prev];
-                            return updated.slice(0, pageSize); // максимум pageSize элементов
+                            return updated.slice(0, pageSize);
                         });
                     }
 
-                    // Не меняем fields, если они уже есть
                     if (newAnswer.fields && newAnswer.fields.length > 0) {
                         setFields(newAnswer.fields);
                     }
 
-                    // Обновляем имя теста, если нужно
                     if (newAnswer.questionnaireName) {
                         setTestName(newAnswer.questionnaireName);
                     }
@@ -158,7 +159,6 @@ const AnswerPage = () => {
                                         <PaginationLink previous onClick={() => handlePageChange(page - 1)} />
                                     </PaginationItem>
 
-
                                     {Array.from({ length: totalPages }, (_, i) => i)
                                         .filter(i => i === 0 || i === totalPages - 1 || Math.abs(i - page) <= 1)
                                         .map(i => (
@@ -176,7 +176,6 @@ const AnswerPage = () => {
                                         <PaginationLink last onClick={() => handlePageChange(totalPages - 1)} />
                                     </PaginationItem>
                                 </Pagination>
-
                             </div>
                         </>
                     ) : (
@@ -184,6 +183,18 @@ const AnswerPage = () => {
                     )}
                 </div>
             </div>
+
+            <Modal isOpen={showAccessDeniedModal} centered backdrop="static">
+                <ModalHeader>Access Denied</ModalHeader>
+                <ModalBody>
+                    У вас нет доступа к этому тесту. Вы будете перенаправлены на главную страницу.
+                    <div className="mt-3 d-flex justify-content-end">
+                        <Button color="primary" onClick={() => navigate('/')}>
+                            Ок
+                        </Button>
+                    </div>
+                </ModalBody>
+            </Modal>
         </div>
     );
 };

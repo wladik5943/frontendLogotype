@@ -3,6 +3,7 @@ import api from '../api';
 import { logout } from '../utils/auth';
 import Navbar from "../utils/NavbarFull";
 import axios from "axios";
+import async from "async";
 export default function HomePage() {
     const [user, setUser] = useState({
         firstName: '',
@@ -18,7 +19,7 @@ export default function HomePage() {
 
         const item = sessionStorage.getItem('user');
         if(!item || !token) {
-            api.get('/oauth/me')
+           api.get('/oauth/me')
                 .then(res => {
                     setUser(res.data)
                     sessionStorage.setItem("user", JSON.stringify(res.data));
